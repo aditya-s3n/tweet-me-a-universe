@@ -17,8 +17,9 @@
   },
   "homepage": "https://github.com/aditya-s3n/tweet-me-a-universe#readme",
   "dependencies": {
+    "axios": "^0.27.2",
     "dotenv": "^16.0.1",
-    "node-fetch": "^3.2.6",
+    "mongoose": "^6.3.8",
     "twitter-api-v2": "^1.12.2"
   }
 }
