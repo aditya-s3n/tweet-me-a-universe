@@ -36,9 +36,19 @@ async function postAPODTweet(apodData) {
     const apodImageTitle = apodData.title; //get the title of the image
     const apodImageURL = apodData.hdurl; //get the url of the image, in HD quality
     
+    //get database APOD data
+    const databaseAPOD = await findAllData();
+    const days = databaseAPOD[0].day; //get day
+    const apodTweetCount = databaseAPOD[0].apodTweets; //get APOD tweet count
+
     //create the twitter text template
     const tweetText = `\
-Tweet me a Universe --Test 2.0
+Tweet me a Universe
+
+Everday my bot tweets a new NASA image or factoid.
+
+Day: ${days}
+APOD Tweet Count: ${apodTweetCount}
 
 ${apodImageTitle}`;
 
@@ -67,7 +77,10 @@ ${apodImageTitle}`;
             }
             //no error
             else {
-                console.log("Deleted File Successfully");
+                console.log("Deleted Apod Image Successfully");
+
+                //update day and APOD number for Database
+                updateApodData();
             }
         });
     });
@@ -75,7 +88,53 @@ ${apodImageTitle}`;
 
 
 /**************************** MongoDB Database ****************************/
+//get mongoDB password
+const mongoPassword = process.env.MONGODB_PASSWORD;
+//connect to mongoDB Database
+mongoose.connect(`mongodb+srv://admin:${mongoPassword}@cluster0.ycayp.mongodb.net/?retryWrites=true&w=majority`)
 
+//make Schema
+const mainSchema = new mongoose.Schema({
+    day: Number,
+    apodTweets: Number
+});
+
+//create model
+const Main = new mongoose.model("Main", mainSchema);
+
+//create document
+async function resetMainDocument() {
+    //delete all documents
+    await Main.deleteMany({});
+
+    //reset and create n
+    const document = new Main({
+        day: 0,
+        apodTweets: 0,
+    });
+
+    await document.save().then(() => console.log("Reset Tweet me a Universe Database")); //saves to mongo database
+}
+
+//update APOD tweets w/ Days
+async function updateApodData() {
+    const data = findAllData();
+
+    data.then(async res => {
+        //create updated values
+        const updatedDays = res[0].day + 1;
+        const updatedApodTweets = res[0].apodTweets + 1;
+
+        //update the data
+        await Main.updateMany({}, { $set: { day: updatedDays, apodTweets: updatedApodTweets } });
+        console.log("Successfully Updated APOD Database Values");
+    });
+}
+
+//find all the information
+async function findAllData() {
+    return await Main.find({});
+}
 
 
 /**************************** RUN SERVER ****************************/
