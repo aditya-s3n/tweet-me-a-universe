@@ -33,6 +33,8 @@ const client = new TwitterApi({
 
 //send APOD Image + Tweet
 async function postAPODTweet(apodData) {
+    console.log("Beginning APOD Tweet Process"); //terminal feedback
+
     const apodImageTitle = apodData.title; //get the title of the image
     const apodImageURL = apodData.hdurl; //get the url of the image, in HD quality
     
@@ -67,7 +69,11 @@ ${apodImageTitle}`;
         const imageUploadId = await client.v1.uploadMedia(localImageURL); //attach image to tweet
 
         //tweet
-        await client.v1.tweet(tweetText, { media_ids: imageUploadId }); //make post request to Twitter to post tweet
+        const successfulTweet = await client.v1.tweet(tweetText, { media_ids: imageUploadId }); //make post request to Twitter to post tweet
+        //check if tweet is sucessful
+        if (successfulTweet) {
+            console.log("Sucessfully Posted APOD Tweet");
+        }
 
         //delete image
         fs.rm(localImageURL, (err) => {
@@ -80,7 +86,7 @@ ${apodImageTitle}`;
                 console.log("Deleted Apod Image Successfully");
 
                 //update day and APOD number for Database
-                updateApodData();
+                //updateApodData();
             }
         });
     });
