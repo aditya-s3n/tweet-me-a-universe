@@ -86,7 +86,7 @@ ${apodImageTitle}`;
                 console.log("Deleted Apod Image Successfully");
 
                 //update day and APOD number for Database
-                //updateApodData();
+                updateApodData();
             }
         });
     });
