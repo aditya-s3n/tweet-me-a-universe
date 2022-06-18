@@ -87,7 +87,7 @@ ${apodImageTitle}`;
                 console.log("Deleted Apod Image Successfully");
 
                 //update day and APOD number for Database
-                //updateApodData();
+                updateApodData();
             }
         });
     });
@@ -146,8 +146,8 @@ async function findAllData() {
 
 /**************************** RUN SERVER + SCHEDULER ****************************/
 const rule = new schedule.RecurrenceRule(); //start the scheduler to recur to the rule
-rule.hour = 14; //recur at 7am everday
-//rule.minute = 0; //should only recur at 7:00am 
+rule.hour = 7; //recur at 7am everday
+rule.minute = 0; //should only recur at 7:00am 
 rule.tz = "EST"; //change timezone to eastern standard time
 
 //run the job with the recursion rule
