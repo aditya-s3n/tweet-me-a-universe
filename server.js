@@ -7,7 +7,6 @@ const axios = require('axios').default;
 const schedule = require("node-schedule");
 
 
-/**************************** Scheduler ****************************/
 /**************************** NASA API Functions ****************************/
 //get NASA API Key
 const apiKeyNasa = process.env.NASA_API_KEY;
@@ -73,7 +72,10 @@ ${apodImageTitle}`;
         const successfulTweet = await client.v1.tweet(tweetText, { media_ids: imageUploadId }); //make post request to Twitter to post tweet
         //check if tweet is sucessful
         if (successfulTweet) {
-            console.log("Sucessfully Posted APOD Tweet");
+            console.log("Sucessfully Posted APOD Tweet"); //terminal feedback
+
+            //update day and APOD number for Database
+            updateApodData();
         }
 
         //delete image
@@ -85,9 +87,6 @@ ${apodImageTitle}`;
             //no error
             else {
                 console.log("Deleted Apod Image Successfully");
-
-                //update day and APOD number for Database
-                updateApodData();
             }
         });
     });
@@ -117,7 +116,7 @@ async function resetMainDocument() {
     //reset and create n
     const document = new Main({
         day: 1,
-        apodTweets: 1,
+        apodTweets: 1
     });
 
     await document.save().then(() => console.log("Reset Tweet me a Universe Database")); //saves to mongo database
@@ -127,6 +126,7 @@ async function resetMainDocument() {
 async function updateApodData() {
     const data = findAllData();
 
+    //resolve data promise
     data.then(async res => {
         //create updated values
         const updatedDays = res[0].day + 1;
