@@ -4,8 +4,10 @@ const { TwitterApi } = require('twitter-api-v2');
 const mongoose = require('mongoose');
 const fs = require("fs");
 const axios = require('axios').default;
+const schedule = require("node-schedule");
 
 
+/**************************** Scheduler ****************************/
 /**************************** NASA API Functions ****************************/
 //get NASA API Key
 const apiKeyNasa = process.env.NASA_API_KEY;
@@ -15,7 +17,7 @@ async function getAPOD() {
     const apodURL = `https://api.nasa.gov/planetary/apod?api_key=${apiKeyNasa}`;
 
     //make https request
-    const response = await axios.get(apodURL)
+    const response = await axios.get(apodURL);
     
     //send data back 
     return response.data;
@@ -33,19 +35,18 @@ const client = new TwitterApi({
 
 //send APOD Image + Tweet
 async function postAPODTweet(apodData) {
-    console.log("Beginning APOD Tweet Process"); //terminal feedback
-
+    const apodImageURL = apodData.url; //get the url of the image
     const apodImageTitle = apodData.title; //get the title of the image
-    const apodImageURL = apodData.hdurl; //get the url of the image, in HD quality
     
     //get database APOD data
     const databaseAPOD = await findAllData();
-    const days = databaseAPOD[0].day; //get day
-    const apodTweetCount = databaseAPOD[0].apodTweets; //get APOD tweet count
+    const days = databaseAPOD[0].day + 1; //get day
+    const apodTweetCount = databaseAPOD[0].apodTweets + 1; //get APOD tweet count
 
     //create the twitter text template
     const tweetText = `\
 Tweet me a Universe
+---
 
 Everday my bot tweets a new NASA image or factoid.
 
@@ -115,8 +116,8 @@ async function resetMainDocument() {
 
     //reset and create n
     const document = new Main({
-        day: 0,
-        apodTweets: 0,
+        day: 1,
+        apodTweets: 1,
     });
 
     await document.save().then(() => console.log("Reset Tweet me a Universe Database")); //saves to mongo database
@@ -143,6 +144,16 @@ async function findAllData() {
 }
 
 
-/**************************** RUN SERVER ****************************/
-let data = getAPOD();
-data.then(data => postAPODTweet(data));
+/**************************** RUN SERVER + SCHEDULER ****************************/
+const rule = new schedule.RecurrenceRule(); //start the scheduler to recur to the rule
+rule.hour = 7; //recur at 7am everday
+rule.minute = 0; //should only recur at 7:00am 
+rule.tz = "EST"; //change timezone to eastern standard time
+
+//run the job with the recursion rule
+schedule.scheduleJob(rule, () => {
+    console.log("Beginning APOD Tweet Process"); //terminal feedback
+
+    let data = getAPOD(); //get the apod data
+    data.then(data => postAPODTweet(data)); //resolve the promise, and post the tweet
+});
