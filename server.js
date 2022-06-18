@@ -147,7 +147,7 @@ async function findAllData() {
 /**************************** RUN SERVER + SCHEDULER ****************************/
 const rule = new schedule.RecurrenceRule(); //start the scheduler to recur to the rule
 rule.hour = 14; //recur at 7am everday
-rule.minute = 0; //should only recur at 7:00am 
+//rule.minute = 0; //should only recur at 7:00am 
 rule.tz = "EST"; //change timezone to eastern standard time
 
 //run the job with the recursion rule
