@@ -34,16 +34,25 @@ const client = new TwitterApi({
 
 //send APOD Image + Tweet
 async function postAPODTweet(apodData) {
-    const apodImageURL = apodData.url; //get the url of the image
-    const apodImageTitle = apodData.title; //get the title of the image
-    
+    const apodMediaURL = apodData.url; //get the url of the image
+    const apodMediaTitle = apodData.title; //get the title of the image
+
     //get database APOD data
     const databaseAPOD = await findAllData();
     const days = databaseAPOD[0].day + 1; //get day
     const apodTweetCount = databaseAPOD[0].apodTweets + 1; //get APOD tweet count
 
-    //create the twitter text template
-    const tweetText = `\
+    //get image and save it
+    const mediaType = apodMediaURL.split(".").at(-1) //get type of media that is going to get streamed)
+    const localMediaURL = `./apodMedia.${mediaType}`; //pictures, audio, video
+    
+    //get the boolean value of the supported media types
+    const supportedMedia = mediaType === "mov" || mediaType === "mp4" || mediaType === "jpg" || mediaType === "png" || mediaType === "gif" || mediaType === "webp";
+    //decide if media can be uploaded, or must be put into a link
+    //only .mov, .mp4, .jpg, .png, .webp are allowed in tweets
+    if (supportedMedia) {
+        //create the twitter text template
+        const tweetText = `\
 Tweet me a Universe
 ---
 
@@ -52,24 +61,61 @@ Everday my bot tweets a new NASA image or factoid.
 Day: ${days}
 APOD Tweet Count: ${apodTweetCount}
 
-${apodImageTitle}`;
+${apodMediaTitle}`;
 
-    //get image and save it
-    const localImageURL = "./apodImage.jpg";
-    // GET request for remote image in node.js using Axios
-    const imageData = await axios({
-        method: 'get',
-        url: apodImageURL,
-        responseType: 'stream'
-    })
-    const imageUpload = imageData.data.pipe(fs.createWriteStream(localImageURL)); //make image in local machine
+        // GET request for remote image in node.js using Axios
+        const mediaData = await axios({
+            method: 'get',
+            url: apodMediaURL,
+            responseType: 'stream'
+        })
+        const imageUpload = mediaData.data.pipe(fs.createWriteStream(localMediaURL)); //make image in local machine
 
-    //when finish downloading image
-    imageUpload.on("finish", async () => {
-        const imageUploadId = await client.v1.uploadMedia(localImageURL); //attach image to tweet
+        //when finish downloading media
+        imageUpload.on("finish", async () => {
+            const mediaUploadID = await client.v1.uploadMedia(localMediaURL, { type: mediaType }); //attach media to tweet, specify type of media being added to not default to .jpg
 
-        //tweet
-        const successfulTweet = await client.v1.tweet(tweetText, { media_ids: imageUploadId }); //make post request to Twitter to post tweet
+            //tweet
+            const successfulTweet = await client.v1.tweet(tweetText, { media_ids: mediaUploadID }); //make post request to Twitter to post tweet
+            //check if tweet is sucessful
+            if (successfulTweet) {
+                console.log("Sucessfully Posted APOD Tweet"); //terminal feedback
+
+                //update day and APOD number for Database
+                updateApodData();
+            }
+
+            //delete media
+            fs.rm(localMediaURL, (err) => {
+                //check for error
+                if (err) {
+                    console.log(err)
+                }
+                //no error
+                else {
+                    console.log("Deleted Apod Image Successfully");
+                }
+            });
+        });
+    }
+    
+    //no media type supported
+    else {
+        //create the twitter text template
+        const tweetText = `\
+Tweet me a Universe
+---
+
+Everday my bot tweets a new NASA image or factoid.
+
+Day: ${days}
+APOD Tweet Count: ${apodTweetCount}
+
+${apodMediaTitle}
+${apodMediaURL}`;
+
+        //tweet without image
+        const successfulTweet = await client.v1.tweet(tweetText); //make post request to Twitter to post tweet
         //check if tweet is sucessful
         if (successfulTweet) {
             console.log("Sucessfully Posted APOD Tweet"); //terminal feedback
@@ -78,18 +124,7 @@ ${apodImageTitle}`;
             updateApodData();
         }
 
-        //delete image
-        fs.rm(localImageURL, (err) => {
-            //check for error
-            if (err) {
-                console.log(err)
-            }
-            //no error
-            else {
-                console.log("Deleted Apod Image Successfully");
-            }
-        });
-    });
+    }
 }
 
 
