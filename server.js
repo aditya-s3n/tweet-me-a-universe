@@ -56,7 +56,7 @@ async function postAPODTweet(apodData) {
 Tweet me a Universe
 ---
 
-Everday my bot tweets a new NASA image or factoid.
+Everday a new NASA image or factoid.
 
 Day: ${days}
 APOD Tweet Count: ${apodTweetCount}
@@ -106,7 +106,7 @@ ${apodMediaTitle}`;
 Tweet me a Universe
 ---
 
-Everday my bot tweets a new NASA image or factoid.
+Everday a new NASA image or factoid.
 
 Day: ${days}
 APOD Tweet Count: ${apodTweetCount}
