@@ -4,7 +4,7 @@ const { TwitterApi } = require('twitter-api-v2');
 const mongoose = require('mongoose');
 const fs = require("fs");
 const axios = require('axios').default;
-const schedule = require("node-schedule");
+const express = require('express');
 
 
 /**************************** NASA API Functions ****************************/
@@ -82,7 +82,7 @@ ${apodMediaTitle}`;
                 console.log("Sucessfully Posted APOD Tweet"); //terminal feedback
 
                 //update day and APOD number for Database
-                updateApodData();
+                //updateApodData();
             }
 
             //delete media
@@ -121,7 +121,7 @@ ${apodMediaURL}`;
             console.log("Sucessfully Posted APOD Tweet"); //terminal feedback
 
             //update day and APOD number for Database
-            updateApodData();
+            //updateApodData();
         }
 
     }
@@ -150,8 +150,8 @@ async function resetMainDocument() {
 
     //reset and create n
     const document = new Main({
-        day: 1,
-        apodTweets: 1
+        day: 10,
+        apodTweets: 10
     });
 
     await document.save().then(() => console.log("Reset Tweet me a Universe Database")); //saves to mongo database
@@ -180,15 +180,30 @@ async function findAllData() {
 
 
 /**************************** RUN SERVER + SCHEDULER ****************************/
-const rule = new schedule.RecurrenceRule(); //start the scheduler to recur to the rule
-rule.hour = 7; //recur at 7am everday
-rule.minute = 0; //should only recur at 7:00am 
-rule.tz = "EST"; //change timezone to eastern standard time
+const app = express();
 
-//run the job with the recursion rule
-schedule.scheduleJob(rule, () => {
-    console.log("Beginning APOD Tweet Process"); //terminal feedback
+app.get("/", (req, res) => {
+    let message = req.query.key; //check for key to run function
 
-    let data = getAPOD(); //get the apod data
-    data.then(data => postAPODTweet(data)); //resolve the promise, and post the tweet
+    if (message === process.env.HTTP_KEY) {
+        let data = getAPOD(); //get apod data
+        data.then(data => postAPODTweet(data)); //resolve promise, post the tweet
+        res.send("VALID, starting tweet process");
+    }
+    else {
+        res.send("Not Valid");
+    }
 });
+
+app.listen(3000);
+// exports.runTweet = (req, res) => {
+//     let message = req.query.key; //check for key to run function
+
+//     if (message === process.env.HTTP_KEY) {
+//         let data = getAPOD(); //get apod data
+//         data.then(data => postAPODTweet(data)); //resolve promise, post the tweet
+//     }
+//     else {
+//         res.send("Not Valid");
+//     }
+// };
