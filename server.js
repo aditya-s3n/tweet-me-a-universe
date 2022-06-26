@@ -3,6 +3,7 @@ require('dotenv').config(); //start reading .env files
 const { TwitterApi } = require('twitter-api-v2');
 const mongoose = require('mongoose');
 const fs = require("fs");
+const os = require("node:os");
 const axios = require('axios').default;
 const express = require('express');
 
@@ -44,7 +45,7 @@ async function postAPODTweet(apodData) {
 
     //get image and save it
     const mediaType = apodMediaURL.split(".").at(-1) //get type of media that is going to get streamed)
-    const localMediaURL = `./apodMedia.${mediaType}`; //pictures, audio, video
+    const localMediaURL = `${os.tmpdir()}/apodMedia.${mediaType}`; //pictures, audio, video
     
     //get the boolean value of the supported media types
     const supportedMedia = mediaType === "mov" || mediaType === "mp4" || mediaType === "jpg" || mediaType === "png" || mediaType === "gif" || mediaType === "webp";
@@ -62,6 +63,8 @@ Day: ${days}
 APOD Tweet Count: ${apodTweetCount}
 
 ${apodMediaTitle}`;
+
+        console.log(localMediaURL);
 
         // GET request for remote image in node.js using Axios
         const mediaData = await axios({
