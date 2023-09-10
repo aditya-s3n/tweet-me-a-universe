@@ -79,7 +79,7 @@ ${apodMediaTitle}`;
             const mediaUploadID = await client.v1.uploadMedia(localMediaURL, { type: mediaType }); //attach media to tweet, specify type of media being added to not default to .jpg
 
             //tweet
-            const successfulTweet = await client.v1.tweet(tweetText, { media_ids: mediaUploadID }); //make post request to Twitter to post tweet
+            const successfulTweet = await client.v2.tweet({ text: tweetText, media: { media_ids: [mediaUploadID] } }); //make post request to Twitter to post tweet
             //check if tweet is sucessful
             if (successfulTweet) {
                 console.log("Sucessfully Posted APOD Tweet"); //terminal feedback
@@ -118,7 +118,7 @@ ${apodMediaTitle}
 ${apodMediaURL}`;
 
         //tweet without image
-        const successfulTweet = await client.v1.tweet(tweetText); //make post request to Twitter to post tweet
+        const successfulTweet = await client.v2.tweet(tweetText); //make post request to Twitter to post tweet
         //check if tweet is sucessful
         if (successfulTweet) {
             console.log("Sucessfully Posted APOD Tweet"); //terminal feedback
